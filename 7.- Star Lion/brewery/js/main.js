@@ -55,6 +55,7 @@ d3.json("data/revenues.json").then((data) => {
     var yAxis = d3.axisLeft(y)
         .ticks(10)
         .tickFormat(d => "$" + d);  
+        
     g.append("g")
         .call(yAxis);
     
