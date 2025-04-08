@@ -2,6 +2,29 @@ var margin = {top: 50, right: 200, bottom: 50, left: 100};
 var width = 960 - margin.left - margin.right;
 var height = 500 - margin.top - margin.bottom;
 
+// Crear el div para el slider en la parte superior
+const sliderDiv = d3.select("body")
+    .append("div")
+    .attr("id", "slider-container")
+    .style("width", (width + margin.left + margin.right) + "px")
+    .style("margin", "10px auto")
+    .style("text-align", "center");
+
+// Añadir el slider
+const slider = sliderDiv.append("input")
+    .attr("type", "range")
+    .attr("id", "year-slider")
+    .attr("min", 0)
+    .attr("step", 1)
+    .style("width", "80%");
+
+// Añadir etiqueta para mostrar el año actual
+const sliderLabel = sliderDiv.append("span")
+    .attr("id", "year-label")
+    .style("margin-left", "10px")
+    .text("Year: ");
+
+// Crear el SVG para la visualización
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -55,6 +78,13 @@ d3.json("data/data.json").then(data => {
         };
     });
     
+    // Configurar el slider con el número correcto de años
+    slider.attr("max", formattedData.length - 1)
+          .attr("value", 0);
+    
+    // Actualizar el texto del label del slider
+    sliderLabel.text("Year: " + formattedData[0].year);
+    
     const continents = [...new Set(formattedData.flatMap(d => d.countries.map(c => c.continent)))];
     const color = d3.scaleOrdinal().domain(continents).range(d3.schemePastel1);
 
@@ -85,6 +115,8 @@ d3.json("data/data.json").then(data => {
         circles.exit().remove();
 
         yearLabel.text(dataForYear.year);
+        sliderLabel.text("Year: " + dataForYear.year);
+        slider.property("value", time);
     }
 
     const legend = svg.append("g").attr("transform", "translate(" + (width + 20) + ", 50)");
@@ -122,7 +154,19 @@ d3.json("data/data.json").then(data => {
     d3.select("#continent-select").on("change", function () {
         update(formattedData[time]);
     });
-
+    
+    // Evento para el slider
+    slider.on("input", function() {
+        // Pausar la animación si está en ejecución
+        if (interval) {
+            clearInterval(interval);
+            d3.select("#play-button").text("Play");
+        }
+        
+        // Actualizar el índice de tiempo y la visualización
+        time = +this.value;
+        update(formattedData[time]);
+    });
     
     update(formattedData[0]);
 
